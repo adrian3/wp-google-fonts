@@ -40,6 +40,12 @@ write javascript to handle no saving when no real changes have been made
 
 if (!class_exists('googlefonts')) {
     class googlefonts {
+	
+        /**
+        * @var bool $initiated Prevent reinitialisation in PHP4 constructor. In PHP5 this was causing constructor to be called twice.
+        */
+		private static $initiated = false;
+	
         //This is where the class variables go, don't forget to use @var to tell what they're for
         /**
         * @var string The options string name for this plugin
@@ -130,14 +136,12 @@ if (!class_exists('googlefonts')) {
 		
         //Class Functions
         /**
-        * PHP 4 Compatible Constructor
-        */
-        function googlefonts(){$this->__construct();}
-        
-        /**
         * PHP 5 Constructor
         */        
         function __construct(){
+		
+			self::$initiated = true;
+			
             //Language Setup
             $locale = get_locale();
             $mo = dirname(__FILE__) . "/languages/" . $this->localizationDomain . "-".$locale.".mo";
@@ -166,6 +170,16 @@ if (!class_exists('googlefonts')) {
 
 			add_action('wp_ajax_googlefont_action', array($this, 'googlefont_action_callback'));			
         }
+		
+		/**
+        * PHP 4 Compatible Constructor
+		* FIX: anber500 - added an extra check to prevent double initialisation in php5
+        */
+        function googlefonts(){
+			if(!self::$initiated){
+				$this->__construct();
+			}
+		}
 
 		/***********************************************/
 		
